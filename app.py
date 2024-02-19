@@ -65,7 +65,6 @@ if st.button("Get Recommendations"):
     st.session_state.messages.append({"role": "assistant", "content": string_response})
 
 
-
 response = True
 
 prompt = st.chat_input("Ask me anything...")
