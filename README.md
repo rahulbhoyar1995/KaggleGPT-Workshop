@@ -1,4 +1,4 @@
-## KaggleGPT
+## KaggleGPT: Dataset Recommender System via Large Language Models
 
 ### Authors :
 
