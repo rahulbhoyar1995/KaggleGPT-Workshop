@@ -1,8 +1,6 @@
 import streamlit as st
 from openai import OpenAI
 from utils import download_the_conversation, summarise_the_conversation, generating_response
-import pandas as pd
-import numpy as np
 from langchain_openai import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
 
@@ -13,7 +11,7 @@ st.set_page_config(
         initial_sidebar_state='collapsed'
     )
 
-st.header("KaggleGPT")
+st.header("KaggleGPT: Dataset Recommender System via Large Language Models")
 
 # Set OpenAI API key from Streamlit secrets
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
@@ -46,25 +44,31 @@ loaded_db = FAISS.load_local("vector_database", embeddings)
 retriever = loaded_db.as_retriever()
 
 response = False
-# user_input_query = st.text_input("Write the topic for which you want the Kaggle Datasets recommendations for?")
 
-# # with st.chat_message("assistant"):
-# string_response = generating_response(user_input_query,retriever)
-# response = st.write(string_response)# Add assistant response to chat history
-# st.session_state.messages.append({"role": "assistant", "content": string_response})
+if "is_recommendation_generated" not in st.session_state:
+        st.session_state.is_recommendation_generated = False
 
-
-
-
-user_input_query = st.text_input("Write the topic for which you want Kaggle Datasets recommendations for?")
+if not st.session_state.is_recommendation_generated:
+    user_input_query = st.text_input("Write the topic for which you want Kaggle Datasets recommendations for?")
+    
+    actions = ["Profile Based", "Expert Based", "Knowledge Based","Multi-Criteria Based"]
+    selected_action = st.selectbox("Recommendation Type:", actions)
 
     # Button to trigger recommendation
-if st.button("Get Recommendations"):
-    string_response = generating_response(user_input_query,retriever)
-    response = st.write(string_response)# Add assistant response to chat history
-    st.session_state.messages.append({"role": "assistant", "content": string_response})
+    if st.button("Get Recommendations"):
+        string_response = generating_response(user_input_query, retriever)
 
+        # Display the assistant response
+        st.write("The fetched response is: ")
+        st.write(string_response)
 
+        # Add user and assistant messages to chat history
+        st.session_state.messages.append({"role": "user", "content": user_input_query})
+        st.session_state.messages.append({"role": "assistant", "content": string_response})
+
+        # Set flag to indicate that recommendation is generated
+        st.session_state.is_recommendation_generated = True
+               
 response = True
 
 prompt = st.chat_input("Ask me anything...")
