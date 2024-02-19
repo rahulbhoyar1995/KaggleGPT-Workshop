@@ -1,0 +1,10 @@
+streamlit
+watchdog
+openai
+langchain
+langchain_openai
+langchain_community 
+unstructured 
+unstructured[pdf]
+faiss-gpu
+faiss-cpu
