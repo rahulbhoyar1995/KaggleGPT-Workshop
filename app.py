@@ -41,7 +41,7 @@ for message in st.session_state.messages:
 #prompt = st.chat_input("What is up?")
 embeddings = OpenAIEmbeddings()
 loaded_db = FAISS.load_local("vector_database", embeddings)
-retriever = loaded_db.as_retriever()
+retriever = loaded_db.as_retriever(search_kwargs={"k": 15})
 
 response = False
 
