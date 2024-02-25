@@ -2,7 +2,7 @@ import streamlit as st
 from openai import OpenAI
 from utils import download_the_conversation, summarise_the_conversation, generating_response
 from langchain_openai import OpenAIEmbeddings
-from langchain.vectorstores import FAISS
+from langchain_community.vectorstores import FAISS
 
 st.set_page_config(
         page_title="KaggleGPT",
@@ -12,7 +12,16 @@ st.set_page_config(
     )
 
 st.header("KaggleGPT: Dataset Recommender System via Large Language Models")
+page_bg_img = '''
+<style>
+body {
+background-image: url("https://images.unsplash.com/photo-1542281286-9e0a16bb7366");
+background-size: cover;
+}
+</style>
+'''
 
+st.markdown(page_bg_img, unsafe_allow_html=True)
 # Set OpenAI API key from Streamlit secrets
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
@@ -40,7 +49,7 @@ for message in st.session_state.messages:
 # Accept user input
 #prompt = st.chat_input("What is up?")
 embeddings = OpenAIEmbeddings()
-loaded_db = FAISS.load_local("vector_database", embeddings)
+loaded_db = FAISS.load_local("vectorstore/db_faiss", embeddings)
 retriever = loaded_db.as_retriever(search_kwargs={"k": 15})
 
 response = False

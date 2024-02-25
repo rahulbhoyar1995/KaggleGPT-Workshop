@@ -1,9 +1,12 @@
+# from langchain_openai import ChatOpenAI
+# from langchain_core.prompts import ChatPromptTemplate
+# from langchain.schema import StrOutputParser
+# from langchain_core.runnables import RunnablePassthrough
+# from langchain_openai import OpenAIEmbeddings
+# from langchain.vectorstores import FAISS
+from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate
-from langchain.schema import StrOutputParser
-from langchain_core.runnables import RunnablePassthrough
-from langchain_openai import OpenAIEmbeddings
-from langchain.vectorstores import FAISS
+from langchain.chains import RetrievalQA
 
 def summarise_the_conversation():
     pass
@@ -11,13 +14,6 @@ def summarise_the_conversation():
 def download_the_conversation():
     pass
 
-
-
-from langchain.prompts import PromptTemplate
-from langchain import PromptTemplate
-from langchain_openai import ChatOpenAI
-from nltk.tokenize import word_tokenize
-from langchain.chains import RetrievalQA
 
 def run_qa_chain(llm, retriever, QA_CHAIN_PROMPT, question):
     # Create QA chain
@@ -41,7 +37,6 @@ def generating_response(user_input, retriever):
         Your job is to give the best possible information to the user about Kaggle Datasets in properly structured format.
         Ignore the "Dataset-Nr." from the data.
         Arrange all the datasets in ascending order.
-        Try to go through the information from all datasets and return with all possible datasets. 
         I want minimum 15 datasets no matter what context data you have (Follow this condition strictly).
         At the end of response, add the text : I hope this was a helpful response. Now you can talk with the recommended data.
 
