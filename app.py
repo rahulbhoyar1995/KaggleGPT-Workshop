@@ -1,8 +1,35 @@
 import streamlit as st
 from openai import OpenAI
-from utils import download_the_conversation, summarise_the_conversation, generating_response
+from utils import download_the_conversation, summarise_the_conversation, generating_response,prompt_constructor
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
+        
+        
+def get_kaggle_recommendations(retriever):
+        # Create QA_CHAIN_PROMPT from the template
+    user_input_query = st.text_input("Write the topic for which you want Kaggle Datasets recommendations for?")
+    
+    actions = ["Profile Based", "Expert Based", "Knowledge Based","Multi-Criteria Based"]
+    selected_action = st.selectbox("Recommendation Type:", actions)
+
+    # Button to trigger recommendation
+    if st.button("Get Recommendations"):
+        QUERY_TEMPLATE = prompt_constructor(selected_action)
+        print("Query template :")
+        print("-"*200)
+        print(QUERY_TEMPLATE)
+        string_response = generating_response(QUERY_TEMPLATE, retriever,user_input_query)
+
+        # Display the assistant response
+        st.write("The fetched response is: ")
+        st.write(string_response)
+
+        # Add user and assistant messages to chat history
+        st.session_state.messages.append({"role": "user", "content": user_input_query})
+        st.session_state.messages.append({"role": "assistant", "content": string_response})
+
+        # Set flag to indicate that recommendation is generated
+        st.session_state.is_recommendation_generated = True
 
 st.set_page_config(
         page_title="KaggleGPT",
@@ -58,25 +85,7 @@ if "is_recommendation_generated" not in st.session_state:
         st.session_state.is_recommendation_generated = False
 
 if not st.session_state.is_recommendation_generated:
-    user_input_query = st.text_input("Write the topic for which you want Kaggle Datasets recommendations for?")
-    
-    actions = ["Profile Based", "Expert Based", "Knowledge Based","Multi-Criteria Based"]
-    selected_action = st.selectbox("Recommendation Type:", actions)
-
-    # Button to trigger recommendation
-    if st.button("Get Recommendations"):
-        string_response = generating_response(user_input_query, retriever)
-
-        # Display the assistant response
-        st.write("The fetched response is: ")
-        st.write(string_response)
-
-        # Add user and assistant messages to chat history
-        st.session_state.messages.append({"role": "user", "content": user_input_query})
-        st.session_state.messages.append({"role": "assistant", "content": string_response})
-
-        # Set flag to indicate that recommendation is generated
-        st.session_state.is_recommendation_generated = True
+    get_kaggle_recommendations(retriever)
                
 response = True
 
