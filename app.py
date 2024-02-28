@@ -1,35 +1,39 @@
 import streamlit as st
 from openai import OpenAI
-from utils import download_the_conversation, summarise_the_conversation, generating_response,prompt_constructor
+from utils import download_the_conversation, summarise_the_conversation, generating_response,prompt_constructor, set_background, sidebar_bg
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
-        
+
         
 def get_kaggle_recommendations(retriever):
         # Create QA_CHAIN_PROMPT from the template
-    user_input_query = st.text_input("Write the topic for which you want Kaggle Datasets recommendations for?")
+    user_input_query = st.text_area("Write the topic for which you want Kaggle Datasets recommendations for?", height=100)
     
     actions = ["Profile Based", "Expert Based", "Knowledge Based","Multi-Criteria Based"]
     selected_action = st.selectbox("Recommendation Type:", actions)
 
     # Button to trigger recommendation
     if st.button("Get Recommendations"):
-        QUERY_TEMPLATE = prompt_constructor(selected_action)
-        print("Query template :")
-        print("-"*200)
-        print(QUERY_TEMPLATE)
-        string_response = generating_response(QUERY_TEMPLATE, retriever,user_input_query)
+        if not user_input_query:
+            st.error("Please provide a topic for Kaggle Datasets recommendations.")
+        else:
+            with st.spinner("Wait.Fetching kaggle datasets recommendations..."):
+                QUERY_TEMPLATE = prompt_constructor(selected_action)
+                print("Query template :")
+                print("-"*200)
+                print(QUERY_TEMPLATE)
+                string_response = generating_response(QUERY_TEMPLATE, retriever, user_input_query)
 
-        # Display the assistant response
-        st.write("The fetched response is: ")
-        st.write(string_response)
+                # Display the assistant response
+                st.success("Fetched response:")
+                st.write(string_response)
 
-        # Add user and assistant messages to chat history
-        st.session_state.messages.append({"role": "user", "content": user_input_query})
-        st.session_state.messages.append({"role": "assistant", "content": string_response})
+                # Add user and assistant messages to chat history
+                st.session_state.messages.append({"role": "user", "content": user_input_query})
+                st.session_state.messages.append({"role": "assistant", "content": string_response})
 
-        # Set flag to indicate that recommendation is generated
-        st.session_state.is_recommendation_generated = True
+                # Set flag to indicate that recommendation is generated
+                st.session_state.is_recommendation_generated = True
 
 st.set_page_config(
         page_title="KaggleGPT",
@@ -39,16 +43,10 @@ st.set_page_config(
     )
 
 st.header("KaggleGPT: Dataset Recommender System via Large Language Models")
-page_bg_img = '''
-<style>
-body {
-background-image: url("https://images.unsplash.com/photo-1542281286-9e0a16bb7366");
-background-size: cover;
-}
-</style>
-'''
 
-st.markdown(page_bg_img, unsafe_allow_html=True)
+set_background('streamlit_ui/img/kagglegpt_background_img.webp')
+
+sidebar_bg('streamlit_ui/img/website.jpg')
 # Set OpenAI API key from Streamlit secrets
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
@@ -61,12 +59,26 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 with st.sidebar:
+    
+    if st.button("Summarise conversation"):
+        summarise_the_conversation(st.session_state.messages)
+        
+    if st.button("Download converation"):
+        st.success("PDF created successfully! Click the button below to download.")
+
+        # Create PDF and get its filename
+        pdf_filename = download_the_conversation(st.session_state.messages)
+
+        # Provide the generated PDF for download
+        st.download_button(
+        label="Download PDF",
+        data=open(pdf_filename, 'rb').read(),
+        file_name="conversation.pdf",
+        mime='application/pdf'
+    )   
+         
     if st.button("New Conversation"):
         st.session_state.messages = []
-    if st.button("Summarise the Conversation"):
-        summarise_the_conversation()
-    if st.button("Download the Conversation"):
-        download_the_conversation()
    
 # Display chat messages
 for message in st.session_state.messages:
@@ -107,4 +119,4 @@ if prompt:
             )
         response = st.write_stream(stream)
         st.session_state.messages.append({"role": "assistant", "content": response})
-        print("All messages :",st.session_state.messages)     
+        print("All messages :",type(st.session_state.messages))   
