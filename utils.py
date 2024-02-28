@@ -4,7 +4,6 @@ from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 from langchain.chains import RetrievalQA
 from reportlab.lib.pagesizes import letter
-
 from reportlab.platypus import SimpleDocTemplate,Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
 
