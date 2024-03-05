@@ -1,39 +1,35 @@
+import os
 import streamlit as st
-from openai import OpenAI
-from utils import download_the_conversation, summarise_the_conversation, generating_response,prompt_constructor, set_background, sidebar_bg
+from utils_archieve import download_the_conversation, summarise_the_conversation, generating_response,prompt_constructor, set_background, sidebar_bg, read_pdf, read_docx
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
+from langchain.memory import ConversationBufferMemory
+from langchain_openai import ChatOpenAI
+from langchain.chains import ConversationalRetrievalChain
+from langchain.prompts import PromptTemplate
+from utils import get_kaggle_recommendation
+from langchain.schema.document import Document
+from langchain.chains import ConversationalRetrievalChain
+from langchain.prompts import PromptTemplate
+from langchain.text_splitter import CharacterTextSplitter
+#from langchain.docstore.document import Document
+from langchain.schema.document import Document
 
-        
-def get_kaggle_recommendations(retriever):
-        # Create QA_CHAIN_PROMPT from the template
-    user_input_query = st.text_area("Write the topic for which you want Kaggle Datasets recommendations for?", height=100)
-    
-    actions = ["Profile Based", "Expert Based", "Knowledge Based","Multi-Criteria Based"]
-    selected_action = st.selectbox("Recommendation Type:", actions)
 
-    # Button to trigger recommendation
-    if st.button("Get Recommendations"):
-        if not user_input_query:
-            st.error("Please provide a topic for Kaggle Datasets recommendations.")
-        else:
-            with st.spinner("Wait.Fetching kaggle datasets recommendations..."):
-                QUERY_TEMPLATE = prompt_constructor(selected_action)
-                print("Query template :")
-                print("-"*200)
-                print(QUERY_TEMPLATE)
-                string_response = generating_response(QUERY_TEMPLATE, retriever, user_input_query)
+def get_text_chunks_langchain(text):
+    text_splitter = CharacterTextSplitter(chunk_size=100, chunk_overlap=40)
+    docs = [Document(page_content=x) for x in text_splitter.split_text(text)]
+    return docs
 
-                # Display the assistant response
-                st.success("Fetched response:")
-                st.write(string_response)
 
-                # Add user and assistant messages to chat history
-                st.session_state.messages.append({"role": "user", "content": user_input_query})
-                st.session_state.messages.append({"role": "assistant", "content": string_response})
-
-                # Set flag to indicate that recommendation is generated
-                st.session_state.is_recommendation_generated = True
+def chat_retriever(response_from_llm):
+    print("response_from_llm :", response_from_llm)
+    #documents =  Document(page_content=response_from_llm, metadata={"source": "local"})
+    documents = get_text_chunks_langchain(response_from_llm)
+    embeddings = OpenAIEmbeddings()
+    vectordb = FAISS.from_documents(documents, embeddings)
+    retriever = vectordb.as_retriever(search_kwargs={"k": 7})
+    return retriever
 
 st.set_page_config(
         page_title="KaggleGPT",
@@ -42,13 +38,8 @@ st.set_page_config(
         initial_sidebar_state='collapsed'
     )
 
-st.header("KaggleGPT: Dataset Recommender System via Large Language Models")
-
-set_background('streamlit_ui/img/kagglegpt_background_img.webp')
-
-sidebar_bg('streamlit_ui/img/website.jpg')
-# Set OpenAI API key from Streamlit secrets
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+st.header("KaggleGPT")
+st.subheader("Dataset Recommender System via Large Language Models")
 
 # Set a default model
 if "openai_model" not in st.session_state:
@@ -57,6 +48,9 @@ if "openai_model" not in st.session_state:
 # Initialize chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
+
+os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+
 
 with st.sidebar:
     
@@ -79,44 +73,105 @@ with st.sidebar:
          
     if st.button("New Conversation"):
         st.session_state.messages = []
-   
+        
+
 # Display chat messages
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
+        
+llm = ChatOpenAI(model_name = "gpt-4", streaming=True)
 
-# Accept user input
-#prompt = st.chat_input("What is up?")
-embeddings = OpenAIEmbeddings()
-loaded_db = FAISS.load_local("vectorstore/db_faiss", embeddings)
-retriever = loaded_db.as_retriever(search_kwargs={"k": 15})
+#
+def get_kaggle_recommendations(docx_text):
+    response_from_llm = get_kaggle_recommendation(docx_text, llm)
+    return response_from_llm
 
-response = False
 
-if "is_recommendation_generated" not in st.session_state:
-        st.session_state.is_recommendation_generated = False
+uploaded_file = st.file_uploader("Upload a DOCX file", type=["docx"])
 
-if not st.session_state.is_recommendation_generated:
-    get_kaggle_recommendations(retriever)
-               
-response = True
+if "is_docx_file_uploaded" not in st.session_state:
+    st.session_state.is_docx_file_uploaded = False
+              
+if uploaded_file is not None:
+    st.success("File uploaded successfully!")
 
-prompt = st.chat_input("Ask me anything...")
-if prompt:
+    docx_text = read_docx(uploaded_file)
+    st.markdown("**__Text extracted from the DOCX file:__**")
+    st.session_state.is_docx_file_uploaded = True
+    uploaded_file = st.empty()
+    
+# actions = ["Profile Based", "Expert Based", "Knowledge Based","Multi-Criteria Based"]
+# selected_action = st.selectbox("Recommendation Type:", actions) 
+selected_action = "Profile Based"
+if st.session_state.is_docx_file_uploaded and selected_action:
+    if "is_recommendation_generated" not in st.session_state:
+            st.session_state.is_recommendation_generated = False
+
+    if not st.session_state.is_recommendation_generated:
+        with st.spinner("Wait....Fetching kaggle datasets recommendations..."):
+            response_from_llm = get_kaggle_recommendations(docx_text)
+            st.session_state.response_from_llm = response_from_llm
+            st.success("Fetched response:")
+            st.markdown("**__Here are the best datasets recommended:__**")
+            st.markdown(response_from_llm) 
+            #st.session_state.messages.append({"role": "user", "content": docx_text})
+            st.session_state.messages.append({"role": "assistant", "content": response_from_llm})
+            st.session_state.is_recommendation_generated = True
+
+
+    if st.session_state.is_recommendation_generated:
+        retriever = chat_retriever(st.session_state.response_from_llm)
+    
+    if "retriever" not in st.session_state:
+        st.session_state.retriever = retriever 
+
+def chat_response(user_input):
+    custom_prompt_template = """
+        Answer all the questions strictly with the below context. If user asked the question out of context, please respond with "Sorry, but I don't know about it.". Please do not give any information other this context :
+        {context}
+        
+        Question: {question}
+        """
+        # Create a PromptTemplate instance with your custom template
+    custom_prompt = PromptTemplate(
+            template=custom_prompt_template,
+            input_variables=["context", "question"],
+        )
+        # Use your custom prompt when creating the ConversationalRetrievalChain
+        
+    memory = ConversationBufferMemory(
+        memory_key="chat_history",
+        return_messages=True
+        )
+        
+    qa = ConversationalRetrievalChain.from_llm(
+            llm,
+            verbose=True,
+            retriever=st.session_state.retriever,
+            memory=memory,
+            combine_docs_chain_kwargs={"prompt": custom_prompt},
+        )        
+    response = qa({"question": user_input})['answer']
+    return response
+    
+    
+    
+user_input = st.chat_input("Ask me anything...")
+
+
+
+if user_input:
     # Add user message to chat history
-    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.session_state.messages.append({"role": "user", "content": user_input})
     # Display user message in chat message container
     with st.chat_message("user"):
-        st.markdown(prompt)
+        st.markdown(user_input)
     
     # Display assistant response in chat message container
+    #response = qa({"question": user_input})['answer']
+    response = chat_response(user_input)        #qa({"question": user_input})['answer']
+    st.session_state.messages.append({"role": "assistant", "content": response})
     
     with st.chat_message("assistant"):
-        stream = client.chat.completions.create(
-                model=st.session_state["openai_model"],
-                messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages],
-                stream=True,
-            )
-        response = st.write_stream(stream)
-        st.session_state.messages.append({"role": "assistant", "content": response})
-        print("All messages :",type(st.session_state.messages))   
+        st.markdown(response)

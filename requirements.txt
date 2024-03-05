@@ -10,3 +10,5 @@ faiss-cpu
 faiss-gpu
 reportlab
 huggingface_hub
+pypdf2
+python-docx
