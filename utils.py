@@ -1,16 +1,12 @@
-import os
-import streamlit as st
-from utils_archieve import download_the_conversation, summarise_the_conversation, generating_response,prompt_constructor, set_background, sidebar_bg, read_pdf, read_docx
+from docx import Document
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.memory import ConversationBufferMemory
-from langchain_openai import ChatOpenAI
 from langchain.chains import ConversationalRetrievalChain
 from langchain.prompts import PromptTemplate
-from langchain.text_splitter import CharacterTextSplitter
-#from langchain.docstore.document import Document
-from langchain.schema.document import Document
-
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate,Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
 
 
 def get_kaggle_recommendation(user_input, llm):  
@@ -74,6 +70,57 @@ def get_kaggle_recommendation(user_input, llm):
     )        
     response = qa({"question": user_input})['answer']
     return response
+
+def summarise_the_conversation():
+    pass
+
+
+def download_the_conversation(messages, filename='conversation.pdf'):
+    doc = SimpleDocTemplate(filename, pagesize=letter)
+    story = []
+
+    title_style = getSampleStyleSheet()["Title"]
+    title_data = [
+        Paragraph('<b><u>Conversation with Kaggle Recommendation System</u></b>', title_style),
+        Paragraph('<br/>', title_style)  # Add two break lines before user response
+    ]
+    story.extend(title_data)
+
+
+    # Add dialogues to the PDF
+    dialogue_style_user = getSampleStyleSheet()["BodyText"]
+    dialogue_style_user.fontName = 'Helvetica'  # Change font to Helvetica for better readability
+    dialogue_style_assistant = getSampleStyleSheet()["BodyText"]
+    dialogue_style_assistant.fontName = 'Helvetica'
+    dialogue_style_assistant.alignment = 0  # Align left for assistant's messages
+
+    for message in messages:
+        role = message['role']
+        content = message['content']
+
+        if role == 'user':
+            dialogue_data = [
+                Paragraph(f'<b>User:</b> {content}', dialogue_style_user),
+                Paragraph('<br/>', dialogue_style_user)  # Add a break line between user and assistant messages
+            ]
+        else:
+            dialogue_data = [
+                Paragraph(f'<b>Kaggle Recommender Engine:</b> {content}', dialogue_style_assistant),
+                Paragraph('<br/>', dialogue_style_assistant)
+            ]
+
+        story.extend(dialogue_data)
+
+    doc.build(story)
+    return filename
+
+
+def read_docx(file):
+    doc = Document(file)
+    text = ""
+    for paragraph in doc.paragraphs:
+        text += paragraph.text + "\n"
+    return text
 
 
 

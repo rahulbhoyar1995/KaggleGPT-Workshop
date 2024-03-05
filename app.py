@@ -1,19 +1,16 @@
 import os
 import streamlit as st
-from utils_archieve import download_the_conversation, summarise_the_conversation, generating_response,prompt_constructor, set_background, sidebar_bg, read_pdf, read_docx
+
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.memory import ConversationBufferMemory
 from langchain_openai import ChatOpenAI
 from langchain.chains import ConversationalRetrievalChain
 from langchain.prompts import PromptTemplate
-from utils import get_kaggle_recommendation
 from langchain.schema.document import Document
-from langchain.chains import ConversationalRetrievalChain
-from langchain.prompts import PromptTemplate
 from langchain.text_splitter import CharacterTextSplitter
-#from langchain.docstore.document import Document
-from langchain.schema.document import Document
+
+from utils import get_kaggle_recommendation, download_the_conversation, summarise_the_conversation , read_docx 
 
 
 def get_text_chunks_langchain(text):
@@ -28,7 +25,7 @@ def chat_retriever(response_from_llm):
     documents = get_text_chunks_langchain(response_from_llm)
     embeddings = OpenAIEmbeddings()
     vectordb = FAISS.from_documents(documents, embeddings)
-    retriever = vectordb.as_retriever(search_kwargs={"k": 7})
+    retriever = vectordb.as_retriever(search_kwargs={"k": 15})
     return retriever
 
 st.set_page_config(
@@ -51,25 +48,20 @@ if "messages" not in st.session_state:
 
 os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 
-
 with st.sidebar:
-    
     if st.button("Summarise conversation"):
         summarise_the_conversation(st.session_state.messages)
         
     if st.button("Download converation"):
         st.success("PDF created successfully! Click the button below to download.")
-
         # Create PDF and get its filename
         pdf_filename = download_the_conversation(st.session_state.messages)
-
         # Provide the generated PDF for download
         st.download_button(
         label="Download PDF",
         data=open(pdf_filename, 'rb').read(),
         file_name="conversation.pdf",
-        mime='application/pdf'
-    )   
+        mime='application/pdf')   
          
     if st.button("New Conversation"):
         st.session_state.messages = []
@@ -97,7 +89,6 @@ if uploaded_file is not None:
     st.success("File uploaded successfully!")
 
     docx_text = read_docx(uploaded_file)
-    st.markdown("**__Text extracted from the DOCX file:__**")
     st.session_state.is_docx_file_uploaded = True
     uploaded_file = st.empty()
     
@@ -115,7 +106,7 @@ if st.session_state.is_docx_file_uploaded and selected_action:
             st.success("Fetched response:")
             st.markdown("**__Here are the best datasets recommended:__**")
             st.markdown(response_from_llm) 
-            #st.session_state.messages.append({"role": "user", "content": docx_text})
+            st.session_state.messages.append({"role": "user", "content": docx_text})
             st.session_state.messages.append({"role": "assistant", "content": response_from_llm})
             st.session_state.is_recommendation_generated = True
 
