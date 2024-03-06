@@ -7,7 +7,6 @@ langchain_community
 unstructured 
 unstructured[pdf]
 faiss-cpu
-faiss-gpu
 reportlab
 huggingface_hub
 pypdf2
