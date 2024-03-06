@@ -9,7 +9,7 @@ from reportlab.platypus import SimpleDocTemplate,Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
 
 
-def get_kaggle_recommendation(user_input, llm):  
+def get_kaggle_recommendations(user_input,selected_action,llm):  
     embeddings = OpenAIEmbeddings()
     vectordb = FAISS.load_local("vectorstore/db_faiss", embeddings)
     retriever = vectordb.as_retriever(search_kwargs={"k": 15})

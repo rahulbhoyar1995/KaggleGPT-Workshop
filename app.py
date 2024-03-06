@@ -10,7 +10,7 @@ from langchain.prompts import PromptTemplate
 from langchain.schema.document import Document
 from langchain.text_splitter import CharacterTextSplitter
 
-from utils import get_kaggle_recommendation, download_the_conversation, summarise_the_conversation , read_docx 
+from utils import get_kaggle_recommendations, download_the_conversation, summarise_the_conversation , read_docx 
 
 
 def get_text_chunks_langchain(text):
@@ -21,7 +21,6 @@ def get_text_chunks_langchain(text):
 
 def chat_retriever(response_from_llm):
     print("response_from_llm :", response_from_llm)
-    #documents =  Document(page_content=response_from_llm, metadata={"source": "local"})
     documents = get_text_chunks_langchain(response_from_llm)
     embeddings = OpenAIEmbeddings()
     vectordb = FAISS.from_documents(documents, embeddings)
@@ -66,18 +65,12 @@ with st.sidebar:
     if st.button("New Conversation"):
         st.session_state.messages = []
         
-
-# Display chat messages
+        
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
         
 llm = ChatOpenAI(model_name = "gpt-4", streaming=True)
-
-#
-def get_kaggle_recommendations(docx_text):
-    response_from_llm = get_kaggle_recommendation(docx_text, llm)
-    return response_from_llm
 
 
 uploaded_file = st.file_uploader("Upload a DOCX file", type=["docx"])
@@ -88,25 +81,25 @@ if "is_docx_file_uploaded" not in st.session_state:
 if uploaded_file is not None:
     st.success("File uploaded successfully!")
 
-    docx_text = read_docx(uploaded_file)
+    user_input_docx_text = read_docx(uploaded_file)
     st.session_state.is_docx_file_uploaded = True
     uploaded_file = st.empty()
     
-# actions = ["Profile Based", "Expert Based", "Knowledge Based","Multi-Criteria Based"]
-# selected_action = st.selectbox("Recommendation Type:", actions) 
-selected_action = "Profile Based"
+actions = ["Profile Based", "Expert Based", "Knowledge Based","Multi-Criteria Based"]
+selected_action = st.selectbox("Recommendation Type:", actions) 
+
 if st.session_state.is_docx_file_uploaded and selected_action:
     if "is_recommendation_generated" not in st.session_state:
             st.session_state.is_recommendation_generated = False
 
     if not st.session_state.is_recommendation_generated:
         with st.spinner("Wait....Fetching kaggle datasets recommendations..."):
-            response_from_llm = get_kaggle_recommendations(docx_text)
+            response_from_llm = get_kaggle_recommendations(user_input_docx_text,selected_action,llm)
             st.session_state.response_from_llm = response_from_llm
             st.success("Fetched response:")
             st.markdown("**__Here are the best datasets recommended:__**")
             st.markdown(response_from_llm) 
-            st.session_state.messages.append({"role": "user", "content": docx_text})
+            st.session_state.messages.append({"role": "user", "content": user_input_docx_text})
             st.session_state.messages.append({"role": "assistant", "content": response_from_llm})
             st.session_state.is_recommendation_generated = True
 
