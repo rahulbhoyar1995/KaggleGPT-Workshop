@@ -1,5 +1,5 @@
 venv/
 all_messages.py
-vectorstore/
+vectorstore/*
 secret.txt
 
