@@ -17,7 +17,11 @@ jobs:
 
       - name: Remove research folder
         run: rm -rf research/
-  
+      
+      - name: Git config added
+        run: git config --global user.email "rahulbhoyaroffice@gmail.com"
+        run: git config --global user.name "Rahul Bhoyar"
+
       - name: Commit changes
         run: |
             git add -A
