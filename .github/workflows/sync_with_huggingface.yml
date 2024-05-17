@@ -13,12 +13,17 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          lfs: true
+          lfs: false
 
       - name: Ignore large files
         run : git filter-branch --index-filter 'git rm -rf --cached --ignore-unmatch "research/codebase/3_vectorstore/db_faiss/index.faiss"' HEAD
+
+      - name: reset commit
+        run: git filter-branch --force --index-filter "git rm --cached --ignore-unmatch research/codebase/3_vectorstore/db_faiss/index.faiss" --prune-empty --tag-name-filter cat -- --all
 
       - name: Push to hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: git push --force https://rahul-bhoyar-1995:$HF_TOKEN@huggingface.co/spaces/KaggleGPT/KaggleGPT main
+
+
