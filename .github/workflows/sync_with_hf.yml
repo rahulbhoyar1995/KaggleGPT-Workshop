@@ -17,4 +17,4 @@ jobs:
       - name: Push to hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: git push https://rahul-bhoyar-1995:$HF_TOKEN@huggingface.co/spaces/rahul-bhoyar-1995/KaggleGPT/KaggleGPT main
+        run: git push https://rahul-bhoyar-1995:$HF_TOKEN@huggingface.co/spaces/KaggleGPT/KaggleGPT main
