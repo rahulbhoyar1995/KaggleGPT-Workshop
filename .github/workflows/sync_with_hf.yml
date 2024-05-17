@@ -18,7 +18,7 @@ jobs:
       - name: Set up sparse checkout
         run: |
             git sparse-checkout init --cone
-            git sparse-checkout set '/*' '!test'
+            git sparse-checkout set '/*' '!research'
   
       - name: Push to hub
         env:
