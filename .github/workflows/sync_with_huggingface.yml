@@ -18,9 +18,6 @@ jobs:
   
       - name: Ignore large files
         run : git filter-branch --index-filter 'git rm -rf --cached --ignore-unmatch "research/codebase/3_vectorstore/db_faiss/index.faiss"' HEAD
-      
-      - name: Force files
-        run : git push origin --force --all
 
       - name: Push to hub
         env:
