@@ -14,9 +14,9 @@ jobs:
         with:
           fetch-depth: 0
           lfs: false
-          
+
       - name: Remove test folder
-        run: rm -rf test/
+        run: rm -rf research/
   
       - name: Commit changes
         run: |
