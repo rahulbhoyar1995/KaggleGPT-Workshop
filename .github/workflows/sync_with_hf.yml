@@ -15,10 +15,8 @@ jobs:
           fetch-depth: 0
           lfs: false
 
-      - name: Set up sparse checkout
-        run: |
-            git sparse-checkout init --cone
-            git sparse-checkout set '/*' '!research'
+      - name: Temporarily move test folder
+        run: mv research test_tmp
   
       - name: Push to hub
         env:
