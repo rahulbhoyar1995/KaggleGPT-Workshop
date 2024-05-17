@@ -15,4 +15,4 @@ jobs:
       - name: Push to Hugging face hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: git push --force https://rahul-bhoyar-1995:$HF_TOKEN@huggingface.co/spaces/rahul-bhoyar-1995/KaggleGPT/KaggleGPT main
+        run: git push --force https://rahul-bhoyar-1995:$HF_TOKEN@huggingface.co/spaces/KaggleGPT/KaggleGPT main
