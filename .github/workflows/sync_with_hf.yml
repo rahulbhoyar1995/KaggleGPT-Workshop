@@ -12,15 +12,6 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
-      
-      - name: Setup Git LFS
-        run: git lfs install
-
-      - name: Fetch all LFS objects
-        run: git lfs fetch --all
-
-      - name: Pull LFS objects
-        run: git lfs pull
 
       - name: Push to hub
         env:
