@@ -1,3 +1,16 @@
+---
+title: KaggleGPT
+emoji: 🚀
+colorFrom: blue
+colorTo: indigo
+sdk: streamlit
+sdk_version: 1.34.0
+app_file: app.py
+pinned: false
+python_version: 3.11
+suggested_hardware: "cpu-upgrade"
+---
+
 ## KaggleGPT: Dataset Recommender System via Large Language Models
 
 ### Authors :
