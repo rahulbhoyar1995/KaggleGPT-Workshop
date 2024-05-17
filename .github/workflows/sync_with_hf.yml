@@ -15,20 +15,6 @@ jobs:
           fetch-depth: 0
           lfs: false
 
-      - name: Remove research folder
-        run: rm -rf research/
-      
-      - name: Git config added 1
-        run: git config --global user.email "rahulbhoyaroffice@gmail.com"
-
-      - name: Git config added 2
-        run: git config --global user.name "Rahul Bhoyar"
-
-      - name: Commit changes
-        run: |
-            git add -A
-            git commit -m "Remove research folder before push" || echo "No changes to commit"
-  
       - name: Push to hub
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
